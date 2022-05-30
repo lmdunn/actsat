@@ -1,211 +1,76 @@
-# ![](https://ga-dash.s3.amazonaws.com/production/assets/logo-9f88ae6c9c3871690e33280fcf557f33.png) Project 1: Standardized Test Analysis
+## Problem Statement
 
-### Overview
+One of the questions an experienced ACT and SAT tutor has fielded a lot is whether a student should focus on the ACT or the SAT. Colleges say they treat the two tests equally, but is that true?
 
-Our first module in DSI covers:
-- Basic statistics and probability
-- Many Python programming concepts
-- Programmatically interacting with files and directories
-- Visualizations
-- EDA
-- Working with Jupyter notebooks for development and reporting
+This project aims to explore whether or not college-level data supports the idea that college treats the ACT and the SAT equally. If not, is there an across-the-board bias, or is there a school-by-school bias that an applicant might be able to exploit to their advantage?
 
-You might wonder if you're ready to start doing data science. While you still have **tons** to learn, there are many aspects of the data science process that you're ready to tackle. Project 1 aims to allow you to practice and demonstrate these skills.
+Similarly, are there any state-by-state biases in the strength of the ACT versus the SAT? As students are being compared to other students from their geographic region, this would suggest that an applicant might benefit from doing comparably well on the _less competitive_ test in their state.
 
-For our first project, we're going to take a look at aggregate SAT and ACT scores and participation rates in the United States. We'll seek to identify trends in the data and combine our data analysis with outside research to address our problem statement.
+## Data Dictionary for ACT and SAT Scores by State, 2019
 
-The SAT and ACT are standardized tests that many colleges and universities in the United States require for their admissions process. This score is used along with other materials such as grade point average (GPA) and essay responses to determine whether or not a potential student will be accepted to the university.
+|Feature|Type|Dataset|Description|
+|---|---|---|---|
+|state_or_territory|object|act_2019 and sat_2019 from prepscholar.com|The name of the state or territory|
+|sat_participation_rate|float|sat_2019 from prepscholar.com|The SAT participation rate for eligible students in state or territory|
+|sat_total|int|sat_2019 from prepscholar.com|The average SAT total score (EBRW + Math) in state or territory, rounded to nearest 10|
+|act_participation_rate|float|act_2019 from prepscholar.com|The ACT participation rate for eligible students in state or territory|
+|act_composite|int|act_2019 from prepscholar.com|The average ACT composite in state/territory, rounded to nearest integer|
+|sat_equiv_of_act_composite|int|2018 ACT/SAT Concordance Tables|The equivalent SAT total score (EBRW + Math) for the state or territory's average ACT composite score|
+|mean_sat_minus_sat_equiv_mean_act|int|calculated from sat_total and act_composite|The difference between the mean SAT total and the SAT total equivalent to the mean ACT composite for the state| 
 
-The SAT has two sections of the test: Evidence-Based Reading and Writing and Math ([*source*](https://www.princetonreview.com/college/sat-sections)). The ACT has 4 sections: English, Mathematics, Reading, and Science, with an additional optional writing section ([*source*](https://www.act.org/content/act/en/products-and-services/the-act/scores/understanding-your-scores.html)). They have different score ranges, which you can read more about on their websites or additional outside sources (a quick Google search will help you understand the scores for each test):
-* [SAT](https://collegereadiness.collegeboard.org/sat)
-* [ACT](https://www.act.org/content/act/en.html)
+## Data Dictionary for ACT/SAT Scores by College
 
-Standardized tests have long been a controversial topic for students, administrators, and legislators. Since the 1940's, an increasing number of colleges have been using scores from sudents' performances on tests like the SAT and the ACT as a measure for college readiness and aptitude ([*source*](https://www.minotdailynews.com/news/local-news/2017/04/a-brief-history-of-the-sat-and-act/)). Supporters of these tests argue that these scores can be used as an objective measure to determine college admittance. Opponents of these tests claim that these tests are not accurate measures of students potential or ability and serve as an inequitable barrier to entry.
+|Feature|Type|Dataset|Description|
+|---|---|---|---|
+|school|object|sat_act_by_college from Compass Prep|College name|
+|test_optional_or_no|object|sat_act_by_college from Compass Prep|Describes whether or not the college is test optional|
+|applies_to_class_year_s|object|sat_act_by_college from Compass Prep|Class year or years for which test optional is available|
+|policy_details|object|sat_act_by_college from Compass Prep|Description of the test optional policy, where applicable|
+|number_of_applicants|int|sat_act_by_college from Compass Prep|The number of applicants to the college|
+|accept_rate|float|sat_act_by_college from Compass Prep|The rate of acceptance for applicants|
+|sat_tot_25th_percentile|int|sat_act_by_college from Compass Prep|The 25th percentile SAT total score (EBRW + Math) for accepted students|
+|sat_tot_75th_percentile|int|sat_act_by_college from Compass Prep|The 75th percentile SAT total score (EBRW + Math) for accepted students|
+|act_composite_25th_percentile|int|sat_act_by_college from Compass Prep| The 25th percentile ACT composite for accepted students|
+|act_composite_75th_percentile|int|sat_act_by_college from Compass Prep| The 75th percentile ACT composite for accepted students|
+|sat_equiv_of_act_25th|int|2018 ACT/SAT Concordance Tables|The equivalent SAT total score (EBRW + Math) for the college's 25th percentile ACT composite score|
+|sat_equiv_of_act_75th|int|2018 ACT/SAT Concordance Tables|The equivalent SAT total score (EBRW + Math) for the college's 75th percentile ACT composite score|
+|sat_minus_sat_equiv_25th_perc|int|calculated from sat_tot_25th_percentile and sat_equiv_of_act_25th|This is calculated from the 25th percentile SAT score for the college minus the SAT score equivalent for the 25th percentile ACT score for the college. A positive value indicates the 25th percentile SAT score is higher than its 25th percentile ACT counterpart. A negative value indicates that the 25th percentile ACT score is higher than its 25th percentile SAT counterpart|
+|sat_minus_sat_equiv_75th_perc|int|calculated from sat_tot_75th_percentile and sat_equiv_of_act_75th|This is calculated from the 75th percentile SAT score for the college minus the SAT score equivalent for the 75th percentile ACT score for the college. A positive value indicates the 75th percentile SAT score is higher than its 75th percentile ACT counterpart. A negative value indicates that the 75th percentile ACT score is higher than its 75th percentile SAT counterpart|
 
-### Problem Statement
+## Brief Summary of Analysis
+By examining summary statistics and individual data points, as well as heatmaps, histograms, bar charts, and scatterplots, it became clear that there are biases in most US states and territories towards either the ACT or the SAT and, similarly, that the majority of colleges display some, and in some cases, quite a lot, of bias towards one test or the other.
 
-Generally speaking, you will be asked to come up with a data science problem. This problem is ultimately up to you, but below are some guidelines/things to consider when crafting a problem statement:
-> 1. Consider your audience. Who is your project going to help? Who will your presentation be geared towards? Establishing your audience first can help you narrow down your scope.
-> 2. Consider the data you will use. Based on the contents of this data, think about some questions you could reasonably answer. These questions should aim to solve some kind of problem.
-> 3. Based on these questions, what would bring some kind value to your audience? This can be business insights, increase sales, make decisions, etc.
-> 4. Put everything from the above steps together into a few sentences that describe the specific problem you are trying to solve and who it will benefit.
-> [Here is a blog post](https://towardsdatascience.com/defining-a-data-science-problem-4cbf15a2a461) about crafting a data science problem statement.
+The most helpful metric to this analysis was the "SAT Total minus SAT Equivalent of ACT Composite", measured at the mean for state scores and at the 25th and 75th percentiles for the colleges. The methodology was to:
 
-Here are some example prompts if you need inspiration:
-> * The new format for the SAT was released in March 2016. As an employee of the College Board - the organization that administers the SAT - you are a part of a team that tracks statewide participation and recommends where money is best spent to improve SAT participation rates. Your presentation and report should be geared toward non-technical executives with the College Board and you will use the provided data and outside research to make recommendations about how the College Board might work to increase the participation rate in a *state of your choice*.
-> * You work for a school district that has asked you to advise their high school students on what SAT or ACT score they should be aiming for based on their intended area of study or school preferences.
-> * You are hired by the state of California to analyze standardized test performance for various districts in the state and identify trends so they can allocate resources appropriately.
-> * Lately, more and more schools are opting to drop the SAT/ACT requirement for their Fall 2021 applications ([*read more about this here*](https://www.cnn.com/2020/04/14/us/coronavirus-colleges-sat-act-test-trnd/index.html)). You are hired by a college to advise their admissions team on why this should or should not continue beyond the Fall 2021 applications. (Note: problem statements related to this prompt may not be reasonable to answer just using the data provided. If you want to tackle this one, you may need to find additional data online.)
-> * *Feel free to be creative with your own prompt!*
+1. determine an SAT equivalent to the relevant ACT Composite using the 2018 ACT/SAT Concordance Table.
+2. subtract that SAT equivalent from the related (i.e. mean, 25th percentile, or 75th percentile) SAT Total score.
 
-And here are some example problem statements related to the above prompts. Come up with your own or modify these for your needs, do not just copy the ones given here:
-> * The new format for the SAT was released in March 2016. Since then, levels of participation in multiple states have changed with varying legislative decisions. This project aims to explore trends in SAT and ACT participation for the years 2017-2019 and seeks to identify states that have decreasing SAT participation rates.
-> * High school students often know which colleges they would like to consider, but rarely know what SAT or ACT score they should aim for when applying to these colleges. We wish to explore the schools that have the highest and lowest SAT and ACT score requirements and see if there is a relationship between college prestige and test scores.
-> * The state of California has many school districts. This project aims to identify the districts that have the worst overall student performance on the SAT and ACT tests so the state can recommend programs and allocate resources to these districts in need. 
-> * We hypothesize that student performance on these tests is not an indicator of overall academic performance. This project seeks to see if a relationship exists between student GPA and SAT/ACT scores to support or oppose the continuation of these tests as a requirement for college applications.
-> * *Feel free to be creative with your own problem statement!*
+A positive difference indicates that the SAT score at the given percentile or mean is higher than the ACT score. On the other hand, a negative difference indicates that the SAT score is lower than the ACT score.
 
----
+It would be reasonable to expect that admitted student with a 25th percentile ACT at any given school would have equivalent scores (via the concordance chart) to admitted students with 25th percentile SAT scores at the same school. It turns out, however, that this is very often not the case.
 
-### Datasets
+## Conclusions and Recommendations
 
-#### Provided Data
+### States and Schools Often Show a Clear Bias Towards One Test or the Other
 
-There are 10 datasets included in the [`data`](./data/) folder for this project. You are required to pick **at least two** of these to complete your analysis. Feel free to use more than two if you would like, or add other relevant datasets you find online.
+The data collected here reveals that there are clear biases towards one test or the other depending on the state or territory an applicant is from on the one hand, and the college an applicant is applying to on the other.
 
-* [`act_2017.csv`](./data/act_2017.csv): 2017 ACT Scores by State ([source](https://blog.prepscholar.com/act-scores-by-state-averages-highs-and-lows))
-* [`act_2018.csv`](./data/act_2018.csv): 2018 ACT Scores by State ([source](https://blog.prepscholar.com/act-scores-by-state-averages-highs-and-lows))
-* [`act_2019.csv`](./data/act_2019.csv): 2019 ACT Scores by State ([source](https://blog.prepscholar.com/act-scores-by-state-averages-highs-and-lows))
-* [`act_2019_ca.csv`](./data/act_2019_ca.csv): 2019 ACT Scores in California by School ([source](https://www.cde.ca.gov/ds/sp/ai/) | [data dictionary](https://web.archive.org/web/20210831222336/https://www.cde.ca.gov/ds/sp/ai/reclayoutact19.asp))
-* [`sat_2017.csv`](./data/sat_2017.csv): 2017 SAT Scores by State ([source](https://blog.collegevine.com/here-are-the-average-sat-scores-by-state/))
-* [`sat_2018.csv`](./data/sat_2018.csv): 2018 SAT Scores by State ([source](https://blog.collegevine.com/here-are-the-average-sat-scores-by-state/))
-* [`sat_2019.csv`](./data/sat_2019.csv): 2019 SAT Scores by State ([source](https://blog.prepscholar.com/average-sat-scores-by-state-most-recent))
-* [`sat_2019_by_intended_college_major.csv`](./data/sat_2019_by_intended_college_major.csv): 2019 SAT Scores by Intended College Major ([source](https://reports.collegeboard.org/pdf/2019-total-group-sat-suite-assessments-annual-report.pdf))
-* [`sat_2019_ca.csv`](./data/sat_2019_ca.csv): 2019 SAT Scores in California by School ([source](https://www.cde.ca.gov/ds/sp/ai/) | [data dictionary](https://web.archive.org/web/20210831212915/https://www.cde.ca.gov/ds/sp/ai/reclayoutsat19.asp))
-* [`sat_act_by_college.csv`](./data/sat_act_by_college.csv): Ranges of Accepted ACT & SAT Student Scores by Colleges ([source](https://www.compassprep.com/college-profiles/))
+### This Data Can Be Used to an Individual Applicant's Advantage
 
-**Make sure you cross-reference your data with your data sources to eliminate any data collection or data entry issues.**
+Because standardized test scores are part of a suite of data points admissions offices use to compare students, one to another, it follows that if an applicant has comparable scores on the ACT and the SAT, they can and should decide which score to use based on some combination of geography and the school they're applying to. In essence, students are admitted not only based on their appeal to the school, _but also on their relative strengths -- including test scores -- compared to other applicants._
 
-#### Additional Data
-You are welcome to add any other data sources you find online to support your analysis, but this is **not required**.
+An important caveat is that this data doesn't speak to how much of a benefit is necessary to change an admission decision for any individual application at any given school. It's possible, for instance, that the equivalent of 1 ACT composite point or 30 SAT total score points could shift the balance for one specific applicant at one specific school, but not make a difference for another at the same or another school.
 
----
+However, there's no apparent downside to using this approach other than the resources necessary to prepare for and take both the ACT and the SAT. While this may be prohibitive for some applicants, the two tests share a lot of commonalities, and trying to use the right test at the right school seems to be a low-risk, potentially high-reward approach.
 
-### Deliverables
+### More Data Is Needed to Make More Precise Recommendations
 
-All of your projects will comprise of a written technical report and a presentation. As we continue in the course, your technical report will grow in complexity, but for this initial project it will comprise:
-- A Jupyter notebook that describes your data with visualizations & statistical analysis.
-- A README markdown file the provides an introduction to and overview of your project.
-- Your presentation slideshow rendered as a .pdf file.
-**NOTE**: Your entire Github repository will be evaluated as your technical report. Make sure that your files and directories are named appropriately, that all necessary files are included, and that no unnecessary or incomplete files are included.
+That said, more data is needed to sharpen the determination of which test to use under which circumstance. 
 
-For your first presentation, you'll be presenting to a **non-technical** audience. You should prepare a slideshow with appropriately scaled visuals to complement a compelling narrative. **Presentations shoud be about 5 minutes.**  Time tends to fly when presenting, and doing a dry run for a friend or family member is a great way to practice.
+For instance, at what geographic level are colleges focused? Ideally, high school-level data would be helpful for an applicant to understand whether their particular high school shows a bias towards one test or another. This data is often available for students, anonymized, through the college counselor's office. 
 
----
+In addition, narrower geographic regions than the state level might be more helpful than state-level data. Whether or not that's the case should ideally be determined, perhaps by surveying admissions offices.
 
-### Technical Report Starter Code
+At the level of the college-specific data, it would be helpful to have more detailed data about applicants, such as geographic data, ideally tied to individual scores. To use that example, it would be helpful to know to what extent geography plays into the biases towards one test or another. If so, and students are being compared to each other within regions, that factor might outweigh any mean bias across the college toward one test or another, for any given region. On the other hand, if applicants aren't being considered by geographic region, this factor wouldn't matter. Either determination could influence whether and/or how to balance geographic data (such as the state-level date) against the overall patterns at any given college.
 
-Future projects will require you to decide on the entire structure of your technical report. Here, we provide you with [starter code](./code/starter-code.ipynb) in a Jupyter notebook that will help to guide your data exploration and analysis. **If you choose to edit the core structure of this notebook, make sure you don't exclude any of the requested operations**.
-
----
-
-### Style Guide and Suggested Resources
-
-[Tim Dwyer](https://www.linkedin.com/in/jtimdwyer/) (former DSI student and TA) put together [this style guide](https://git.generalassemb.ly/DSIR-523/style-guide). Some recommendations are geared toward future projects (which will include modeling and span multiple notebooks), but generally these are great recommendations.
-
-Here's a link on [how to give a good lightning talk](https://www.semrush.com/blog/16-ways-to-prepare-for-a-lightning-talk/), which provides some good recommendations for short presentations.
-
-[Here's a great summary](https://towardsdatascience.com/storytelling-with-data-a-data-visualization-guide-for-business-professionals-97d50512b407) of the main points of the book _Storytelling with Data_, which I can't recommend enough. [Here's a blog post](http://www.storytellingwithdata.com/blog/2017/8/9/my-guiding-principles) by the author about his guiding principles for visualizations.
-
----
-
-### Submission
-
-**Materials must be submitted on Friday, June 3.**
-
-Your technical report will be hosted on Github Enterprise. Make sure it includes:
-
-- A README.md (that isn't this file)
-- Jupyter notebook(s) with your analysis (renamed to describe your project)
-- Data files
-- Presentation slides
-- Any other necessary files (images, etc.)
-
-**Please fork the project, download or clone to your local machine, and submit a link in the [Google Classroom](https://classroom.google.com/u/1/c/MzYyMzc5NTA5OTgy) assignment.**
-
----
-
-### Presentation Structure
-
-**You must be ready to present your findings by the start of class on June 3.**
-
-- **Must be within time limit - not more than 5 minutes.**
-- Use Google Slides or some other visual aid (Keynote, Powerpoint, etc).
-- Consider the audience. Assume you are presenting to a non-technical audience (executives with the College Board, school administrators, admissions counselors, State officials, etc.).
-- Start with the **data science problem**.
-- Use visuals that are appropriately scaled and interpretable.
-- Talk about your procedure/methodology (high level, **CODE IS ALWAYS INAPPROPRIATE FOR A NON-TECHNICAL AUDIENCE**).
-- Talk about your primary findings.
-- Make sure you provide **clear recommendations** that follow logically from your analyses and narrative and answer your data science problem.
-
-Be sure to rehearse and time your presentation before class.
-
----
-
-### Rubric
-Your instructors will evaluate your project (for the most part) using the following criteria.  You should make sure that you consider and/or follow most if not all of the considerations/recommendations outlined below **while** working through your project.
-
-**Scores will be out of 21 points based on the 7 items in the rubric.** <br>
-*3 points per section*<br>
-
-| Score | Interpretation |
-| --- | --- |
-| **0** | *Project fails to meet the minimum requirements for this item.* |
-| **1** | *Project meets the minimum requirements for this item, but falls significantly short of portfolio-ready expectations.* |
-| **2** | *Project exceeds the minimum requirements for this item, but falls short of portfolio-ready expectations.* |
-| **3** | *Project meets or exceeds portfolio-ready expectations; demonstrates a thorough understanding of every outlined consideration.* |
-
-**Project Organization**
-- Are modules imported correctly (using appropriate aliases)?
-- Are data imported/saved using relative paths?
-- Does the README provide a good executive summary of the project?
-- Is markdown formatting used appropriately to structure notebooks?
-- Are there an appropriate amount of comments to support the code?
-- Are files & directories organized correctly?
-- Are there unnecessary files included?
-- Do files and directories have well-structured, appropriate, consistent names?
-
-**Clarity of Message**
-- Is the problem statement clearly presented?
-- Does a strong narrative run through the project?
-- Does the student provide appropriate context to connect individual steps back to the overall project?
-- Is it clear how the final recommendations were reached?
-- Are the conclusions/recommendations clearly stated?
-
-**Python Syntax and Control Flow**
-- Is care taken to write human readable code?
-- Is the code syntactically correct (no runtime errors)?
-- Does the code generate desired results (logically correct)?
-- Does the code follows general best practices and style guidelines?
-- Are Pandas functions used appropriately?
-- Does the student demonstrate mastery masking in Pandas?
-- Does the student demonstrate mastery sorting in Pandas?
-
-**Data Cleaning and EDA**
-- Does the student fix data entry issues?
-- Are data appropriately labeled?
-- Are data appropriately typed?
-- Are datasets combined correctly?
-- Are appropriate summary statistics provided?
-- Are steps taken during data cleaning and EDA framed appropriately?
-
-**Visualizations**
-- Are the requested visualizations provided?
-- Do plots accurately demonstrate valid relationships?
-- Are plots labeled properly?
-- Plots interpreted appropriately?
-- Are plots formatted and scaled appropriately for inclusion in a notebook-based technical report?
-
-**Research and Conceptual Understanding**
-- Were useful insights gathered from outside sources?
-- Are sources clearly identified?
-- Does the student provide appropriate interpretation with regards to descriptive and inferential statistics?
-
-**Presentation**
-- Is the problem statement clearly presented?
-- Does a strong narrative run through the presentation building toward a final conclusion?
-- Are the conclusions/recommendations clearly stated?
-- Is the level of technicality appropriate for the intended audience?
-- Is the student substantially over or under time?
-- Does the student appropriately pace their presentation?
-- Does the student deliver their message with clarity and volume?
-- Are appropriate visualizations generated for the intended audience?
-- Are visualizations necessary and useful for supporting conclusions/explaining findings?
-
-In order to pass the project, students must earn a minimum score of 1 for each category.
-- Earning below a 1 in one or more of the above categories would result in a failing project.
-- While a minimum of 1 in each category is the required threshold for graduation, students should aim to earn at least an average of 1.5 across each category. An average score below 1.5, while it may be passing, means students may want to solicit specific feedback in order to significantly improve the project before showcasing it as part of a portfolio or the job search.
-
-### REMEMBER:
-
-This is a learning environment and you are encouraged to try new things, even if they don't work out as well as you planned! While this rubric outlines what we look for in a _good_ project, it is up to you to go above and beyond to create a _great_ project. **Learn from your failures and you'll be prepared to succeed in the workforce**.
+It would also be interesting (and potentially important for the colleges) to uncover why given colleges show the biases they have, particularly as they vary across score levels. For instance, do these schools need to do a better job of comparing scores across test? Are they showing improper biases towards geographic regions? While there are plenty of potential good reasons for schools showing biases (for instance, a state school preferencing in-state applicants, leading to a bias towards that state's preferred test), the information gleaned from examining this question could be important to determining if unhelpful or unconcious factors are at play in any given school's admissions office.
